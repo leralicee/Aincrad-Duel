@@ -5,20 +5,21 @@
 
 ## Configuració bàsica
 
-L'estructura de scripts del projecte és la següent:
-ServerScriptService
-└── CombatManager (Script)
-├── CharacterStats (ModuleScript)
-├── PlayerStats (ModuleScript)
-├── Enemy (ModuleScript)
-└── Boss (ModuleScript)
+Estructura de scripts del projecte:
 
-ReplicatedStorage
-└── CombatAction (RemoteEvent)
+- ServerScriptService
+  - CombatManager (Script)
+    - CharacterStats (ModuleScript)
+    - PlayerStats (ModuleScript)
+    - Enemy (ModuleScript)
+    - Boss (ModuleScript)
 
-StarterGui
-└── BattleGUI (ScreenGui)
-└── UIController (LocalScript)
+- ReplicatedStorage
+  - CombatAction (RemoteEvent)
+
+- StarterGui
+  - BattleGUI (ScreenGui)
+    - UIController (LocalScript)
 
 ## Decisions inicials d'implementació
 
