@@ -1,0 +1,51 @@
+{
+  "name": "AincradDuel",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "CombatAction": {
+        "$className": "RemoteEvent"
+      },
+      "UIUpdate": {
+        "$className": "RemoteEvent"
+      }
+    },
+
+    "ServerScriptService": {
+      "CombatManager": {
+        "$path": "src/server/CombatManager"
+      },
+      "Server": {
+        "$path": "src/server/Server.server.luau"
+      }
+    },
+
+    "ServerStorage": {
+      "EnemyTemplates": {
+        "$path": "src/assets/EnemyTemplates"
+      }
+    },
+
+    "StarterGui": {
+      "BattleGUI": {
+        "$className": "ScreenGui",
+        "$properties": {
+          "ResetOnSpawn": false,
+          "Enabled": true
+        },
+        "UIController": {
+          "$path": "src/gui/UIController.client.luau"
+        }
+      }
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    }
+  }
+}
