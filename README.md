@@ -157,9 +157,7 @@ La lògica de combat és **100% server-side** per seguretat. El client envia acc
 
 ## Autor
 
-**Paula** — DAM1, Entorns de Desenvolupament, curs 2025-26
-
-> ⚠️ Afegeix el teu cognom aquí abans d'entregar.
+**Paula Romero García** — DAM1, Entorns de Desenvolupament, curs 2025-26
 
 ---
 
