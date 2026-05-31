@@ -63,6 +63,21 @@ Vegeu [`docs/manual_tecnic.md`](docs/manual_tecnic.md) per a més detalls i reso
 
 ---
 
+## Com jugar
+
+| Acció | Botó | Efecte |
+|---|---|---|
+| Atacar | ⚔️ ATACAR | Fa dany bàsic a l'enemic (15% de crítics → ×1.5) |
+| Habilitat especial | ✨ HABILITAT | Fa el doble de dany, costa 10 de Mana |
+| Poció | 🧃 POCIÓ | Recupera 30 HP (màxim 3 pocions per partida) |
+| Defensar | 🛡️ DEFENSAR | El proper atac enemic fa la meitat de dany |
+
+- Supera les **3 sales** (Goblin Scout → Orc Warrior → Stone Troll) per arribar al **Boss**.
+- El **Kobold King** entra en **Fase 2** al 50% de vida: ATK augmentat i atacs especials amb cremada 🔥.
+- Al derrotar cada enemic recuperes 20 HP i 10 Mana.
+
+---
+
 ## Estructura del repositori
 
 ```
@@ -117,6 +132,37 @@ La lògica de combat és **100% server-side** per seguretat. El client envia acc
 
 ---
 
+## Estat del projecte
+
+✅ **Versió final funcional** — totes les fases de desenvolupament completades.
+
+| Fase | Estat |
+|---|---|
+| Idea i abast | ✅ Completada |
+| Model i diagrames | ✅ Completada |
+| Entorn i prototip | ✅ Completada |
+| Proves i depuració | ✅ Completada |
+| Millores i reflexió | ✅ Completada |
+| Documentació final | ✅ Completada |
+
+---
+
+## Enllaç al vídeo de gameplay
+
+🎮 [Veure vídeo de gameplay comentat](https://AFEGIR-ENLLAÇ-AQUI)
+
+> Vídeo de mínim 4 minuts on es mostra el funcionament complet del joc i s'expliquen les decisions de disseny.
+
+---
+
 ## Autor
 
 **Paula** — DAM1, Entorns de Desenvolupament, curs 2025-26
+
+> ⚠️ Afegeix el teu cognom aquí abans d'entregar.
+
+---
+
+## Reflexió breu
+
+Aquest projecte m'ha ensenyat a pensar com a desenvolupadora de manera estructurada: primer analitzar el problema, depois modelar la solució amb diagrames, i només llavors programar. La part més difícil ha estat la configuració de l'entorn Rojo i la depuració de bugs de lògica (especialment el sistema de defensa). He après que les proves no són opcionals: sense elles, errors com el reset de `isDefending` haurien passat desapercebuts. L'ús de la IA m'ha ajudat a explorar opcions i desbloquejar problemes, però he hagut de validar cada resposta contra el codi real, cosa que ha reforçat la meva comprensió del projecte.
