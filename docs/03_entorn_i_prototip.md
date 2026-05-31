@@ -39,15 +39,15 @@ Estructura de scripts del projecte:
 
 ### Estructura dels scripts a l'Explorador de Roblox Studio
 
-![Estructura scripts](../captures/captura_estructura.png)
+![Estructura scripts](../evidencies/captures/captura_estructura.png)
 
 ### Interfície de combat en execució
 
-![Combat actiu](../captures/captura_combat.png)
+![Combat actiu](../evidencies/captures/captura_combat.png)
 
 ### Missatge de victòria
 
-![Victòria contra enemic](../captures/captura_victoria.png)
+![Victòria contra enemic](../evidencies/captures/captura_victoria.png)
 
 ## Estat actual del prototip
 
