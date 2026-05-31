@@ -24,8 +24,8 @@ root.Parent = screen
 
 -- Panel d'estadístiques del jugador (esquerra inferior)
 local statsPanel = Instance.new("Frame")
-statsPanel.Size = UDim2.new(0, 220, 0, 110)
-statsPanel.Position = UDim2.new(0, 16, 1, -130)
+statsPanel.Size = UDim2.new(0, 220, 0, 135)
+statsPanel.Position = UDim2.new(0, 16, 1, -155)
 statsPanel.BackgroundColor3 = Color3.fromRGB(10, 10, 20)
 statsPanel.BackgroundTransparency = 0.25
 statsPanel.BorderSizePixel = 0
@@ -98,6 +98,19 @@ potionLabel.TextSize = 12
 potionLabel.TextXAlignment = Enum.TextXAlignment.Left
 potionLabel.Parent = statsPanel
 
+-- Indicador d'efecte d'estat (verí / cremada)
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "StatusLabel"
+statusLabel.Text = ""
+statusLabel.Size = UDim2.new(1, -12, 0, 18)
+statusLabel.Position = UDim2.new(0, 8, 0, 106)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.fromRGB(255, 150, 50)
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 11
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = statsPanel
+
 -- Panel enemic (dreta inferior)
 local enemyPanel = Instance.new("Frame")
 enemyPanel.Size = UDim2.new(0, 220, 0, 80)
@@ -159,6 +172,8 @@ local LOG_COLORS = {
 	victory = Color3.fromRGB(255, 215, 0),
 	boss    = Color3.fromRGB(255, 80, 80),
 	danger  = Color3.fromRGB(255, 80, 80),
+	poison  = Color3.fromRGB(100, 220, 80),
+	burn    = Color3.fromRGB(255, 140, 40),
 }
 
 local function addLog(message, msgType)
@@ -254,6 +269,19 @@ retryBtn.TextSize = 16
 retryBtn.Parent = resultScreen
 Instance.new("UICorner", retryBtn).CornerRadius = UDim.new(0, 8)
 
+-- Estadístiques de la partida (es mostren a la pantalla de victòria)
+local scoreLabel = Instance.new("TextLabel")
+scoreLabel.Name = "ScoreLabel"
+scoreLabel.Size = UDim2.new(0, 480, 0, 44)
+scoreLabel.Position = UDim2.new(0.5, -240, 0.5, 80)
+scoreLabel.BackgroundTransparency = 1
+scoreLabel.Font = Enum.Font.Gotham
+scoreLabel.TextSize = 15
+scoreLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+scoreLabel.TextWrapped = true
+scoreLabel.Text = ""
+scoreLabel.Parent = resultScreen
+
 -- ============================================================
 -- LÒGICA
 -- ============================================================
@@ -279,11 +307,31 @@ local function updateBars(data)
 	manaFill.Size = UDim2.new(manaPct, 0, 1, 0)
 	manaVal.Text = data.mana .. "/" .. data.maxMana
 	potionLabel.Text = "🧪 Pocions: " .. data.potions
-	-- Enemic
+	-- Efecte d'estat (verí / cremada)
+	local se = data.statusEffect
+	if se and se.turnsLeft and se.turnsLeft > 0 then
+		local icons = { poison = "☠", burn = "🔥" }
+		local names = { poison = "Verí", burn = "Cremada" }
+		statusLabel.Text = (icons[se.type] or "?") .. " " ..
+			(names[se.type] or se.type) .. ": " .. se.turnsLeft .. " torn" ..
+			(se.turnsLeft == 1 and "" or "s")
+		statusLabel.TextColor3 = se.type == "burn"
+			and Color3.fromRGB(255, 150, 50)
+			or  Color3.fromRGB(100, 220, 80)
+	else
+		statusLabel.Text = ""
+	end
+	-- Enemic (amb indicador de Fase 2)
 	local ePct = math.clamp(data.enemyHp / data.enemyMaxHp, 0, 1)
 	enemyHpFill.Size = UDim2.new(ePct, 0, 1, 0)
 	enemyHpVal.Text = data.enemyHp .. "/" .. data.enemyMaxHp
-	enemyNameLabel.Text = data.enemyName or "---"
+	if data.enemyPhase == 2 then
+		enemyNameLabel.Text = "⚠ " .. (data.enemyName or "---") .. " [FASE 2]"
+		enemyNameLabel.TextColor3 = Color3.fromRGB(255, 60, 60)
+	else
+		enemyNameLabel.Text = data.enemyName or "---"
+		enemyNameLabel.TextColor3 = Color3.fromRGB(255, 150, 150)
+	end
 	-- Sala
 	local roomText = data.room == 4 and "💀 BOSS FIGHT" or ("Sala " .. (data.room or "?"))
 	roomLabel.Text = roomText
@@ -377,6 +425,7 @@ retryBtn.MouseButton1Click:Connect(function()
 	resultScreen.Visible = false
 	startBtn.Visible = true
 	setActionButtonsVisible(false)
+	scoreLabel.Text = ""
 	-- Netejar log
 	for _, c in ipairs(logFrame:GetChildren()) do
 		if c:IsA("TextLabel") then c:Destroy() end
@@ -407,6 +456,13 @@ uiRemote.OnClientEvent:Connect(function(action, data)
 		combatRemote:FireServer("nextRoom")
 
 	elseif action == "victory" then
+		if data.score then
+			scoreLabel.Text = string.format(
+				"⚔ Dany causat: %d   |   ⚡ Crítics: %d   |   🎯 Torns: %d   |   🧃 Pocions: %d",
+				data.score.damageDealt, data.score.critsLanded,
+				data.score.turnsUsed, data.score.potionsUsed
+			)
+		end
 		showResultScreen(true)
 		setActionButtonsVisible(false)
 

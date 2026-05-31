@@ -59,7 +59,7 @@ rojo serve
 4. Al plugin Rojo → **Connect** (`localhost:34872`)  
 5. Prem **Play** a Studio per jugar
 
-Vegeu [`docs/manual_tecnic.md`](docs/manual_tecnic.md) per a més detalls i resolució de problemes.
+Vegeu [`docs/07_manual_tecnic.md`](docs/07_manual_tecnic.md) per a més detalls i resolució de problemes.
 
 ---
 
@@ -90,8 +90,8 @@ Aincrad-Duel/
 │   ├── 03_entorn_i_prototip.md
 │   ├── 04_proves_i_depuracio.md
 │   ├── 05_millores_i_reflexio_final.md
-│   ├── manual_usuari.md
-│   └── manual_tecnic.md
+│   ├── 06_manual_usuari.md
+│   └── 07_manual_tecnic.md
 ├── diagrames/
 │   ├── diagrama_classes.svg
 │   └── diagrama_comportament.svg

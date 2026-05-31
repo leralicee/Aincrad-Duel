@@ -121,7 +121,7 @@ _(Mòdul base, no té mètodes propis — les dades s'inicialitzen via construct
 
 ## 5. Explicació del diagrama de classes
 
-El diagrama de classes (vegeu `diagrames/diagrama_classes.png`) representa l'arquitectura estàtica del sistema.
+El diagrama de classes (vegeu `diagrames/diagrama_classes.svg`) representa l'arquitectura estàtica del sistema.
 
 **Per què està organitzat així:**
 
@@ -139,7 +139,7 @@ El diagrama de classes (vegeu `diagrames/diagrama_classes.png`) representa l'arq
 
 ## 6. Explicació del diagrama de comportament
 
-El diagrama de comportament escollit és un **diagrama d'estats** (vegeu `diagrames/diagrama_comportament.png`). Representa l'evolució de l'estat intern de `CombatManager` al llarg d'una partida completa.
+El diagrama de comportament escollit és un **diagrama d'estats** (vegeu `diagrames/diagrama_comportament.svg`). Representa l'evolució de l'estat intern de `CombatManager` al llarg d'una partida completa.
 
 **Per què un diagrama d'estats:**
 El repte tècnic central del projecte és gestionar correctament en quina fase del combat es troba el sistema en cada moment. Un diagrama d'estats captura això millor que un diagrama d'activitat o de seqüència, perquè posa el focus en la variable `state` del CombatManager i en les condicions que provoquen les transicions.
@@ -192,8 +192,8 @@ aincrad-duel/
 │   └── 05_millores_i_reflexio_final.md ← (Fase 5)
 │
 ├── diagrames/
-│   ├── diagrama_classes.png
-│   └── diagrama_comportament.png
+│   ├── diagrama_classes.svg
+│   └── diagrama_comportament.svg
 │
 └── src/
     ├── CharacterStats.lua
@@ -241,5 +241,5 @@ Fase 2 completada — Model i diagrames definits.
 
 ### Primer commit
 - **Missatge:** `init: estructura del repositori i documentació de Fase 1 i Fase 2`
-- **Contingut:** README.md, `docs/01_idea_i_abast.md`, `docs/02_model_del_joc.md`, `diagrames/diagrama_classes.png`, `diagrames/diagrama_comportament.png`, estructura de carpetes `src/` i `docs/` buida.
+- **Contingut:** README.md, `docs/01_idea_i_abast.md`, `docs/02_model_del_joc.md`, `diagrames/diagrama_classes.svg`, `diagrames/diagrama_comportament.svg`, estructura de carpetes `src/` i `docs/` buida.
 - **Propòsit:** Deixar evidència d'inici real del projecte i estructura pensada des del principi, no afegida a última hora.

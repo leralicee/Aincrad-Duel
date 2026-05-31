@@ -90,26 +90,33 @@ Classe base per a totes les entitats de combat. Usada via herència per `PlayerS
 
 ### PlayerStats (ModuleScript)
 
-Hereta de CharacterStats via `setmetatable`. Valors inicials: hp=100, atk=15, def=5, mana=50, maxMana=50, potions=3.
+Hereta de CharacterStats via `setmetatable`. Valors inicials: hp=100, atk=15, def=5, mana=50, maxMana=50, potions=3, statusEffect=nil.
 
 | Mètode | Signatura | Retorna | Descripció |
 |---|---|---|---|
 | `rollCrit` | `()` | boolean | 15% de probabilitat de crític. |
 | `useSkill` | `(enemy)` | (damage, isCrit) | Atac especial (cost: 10 mana). Retorna (0, false) si mana < 10. |
 | `usePotion` | `()` | boolean | +30 HP. Retorna false si potions = 0. |
-| `regenerateMana` | `(amount)` | — | Augmenta mana, màxim = maxMana. |
+| `regenerateMana` | `(amount)` | — | Augmenta mana fins a maxMana. |
+| `applyStatusEffect` | `(type, damage, turns)` | — | Aplica verí o cremada. No sobreescriu un efecte actiu. |
+| `tickStatusEffect` | `()` | (damage, type) | Fa dany de l'efecte actiu i decrementa turnsLeft. Retorna (0, nil) si no n'hi ha. |
+
+**Camp `statusEffect`:** `nil` o `{ type="poison"|"burn", damage=N, turnsLeft=N }`. S'envia al client via `pushStats()` per mostrar l'indicador de la GUI.
 
 ### Enemy (ModuleScript)
 
-Hereta de CharacterStats. Afegeix lògica de IA senzilla i el camp `roomId`.
+Hereta de CharacterStats. Afegeix lògica de IA i el camp `specialEffect` configurable.
 
-| Mètode | Signatura | Retorna | Descripció |
+| Camp/Mètode | Signatura | Retorna | Descripció |
 |---|---|---|---|
+| `specialEffect` | camp | taula\|nil | `{ type, damage, turns }` aplicat en `specialAttack`. `nil` per defecte. |
 | `chooseAction` | `()` | "attack"\|"special" | 70% atac bàsic, 30% habilitat especial. |
-| `attack` | `(player)` | actualDamage | Dany = max(1, atk - defJugador×modificador). |
-| `specialAttack` | `(player)` | actualDamage | Dany = max(1, atk×1.5 - defJugador×modificador). |
+| `attack` | `(player)` | actualDamage | Dany = max(1, atk - def×modificador). |
+| `specialAttack` | `(player)` | actualDamage | Dany = max(1, atk×1.5 - def×modificador). Aplica `specialEffect` si en té. |
 
 El modificador de defensa és ×2 si `player.isDefending = true`, ×1 en cas contrari.
+
+**Stone Troll** té `specialEffect = { type="poison", damage=4, turns=3 }`. Configurat a la taula `ROOMS` de `init.server.luau`.
 
 ### Boss (ModuleScript)
 
@@ -118,6 +125,8 @@ Hereta d'Enemy. Afegeix sistema de 2 fases. `roomId` fix = 4.
 | Mètode | Signatura | Retorna | Descripció |
 |---|---|---|---|
 | `checkPhase` | `()` | boolean | Si hp ≤ 50% i phase == 1: phase = 2, atk = atk × 1.5. Retorna true si hi ha canvi. |
+| `chooseAction` | `()` | "attack"\|"special" | Fase 1: 70/30. Fase 2: 50/50 (més agressiu). |
+| `specialAttack` | `(player)` | actualDamage | Fase 1: dany ×1.5. Fase 2: dany ×1.75 + aplica Cremada (6 dany × 2 torns). |
 
 ### CombatManager (init.server.luau)
 
@@ -133,6 +142,7 @@ Script principal del servidor. Gestiona tot el flux de combat.
 | `playerObj` | PlayerStats \| nil | Stats del jugador actiu |
 | `currentEnemyData` | Enemy/Boss \| nil | Stats de l'enemic actiu |
 | `currentEnemyModel` | Model \| nil | Model 3D a l'Workspace |
+| `combatStats` | taula | `{ damageDealt, critsLanded, turnsUsed, potionsUsed }` — estadístiques de la partida, enviades amb l'event `victory` |
 
 **Flux de combat:**
 
@@ -184,11 +194,11 @@ OnServerEvent("nextRoom")
 | Acció | Dades | Descripció |
 |---|---|---|
 | `"log"` | `{message: string, msgType: string}` | Afegeix línia al log de combat |
-| `"stats"` | `{hp, maxHp, mana, maxMana, potions, enemyHp, enemyMaxHp, enemyName, enemyPhase, room}` | Actualitza totes les barres i etiquetes |
+| `"stats"` | `{hp, maxHp, mana, maxMana, potions, enemyHp, enemyMaxHp, enemyName, enemyPhase, room, statusEffect}` | Actualitza totes les barres, etiquetes i indicador d'efecte d'estat |
 | `"spawnEnemy"` | `{enemyName, maxHp, isBoss}` | Notifica l'aparició d'un enemic nou |
 | `"bossPhase2"` | `{}` | Notifica l'activació de la Fase 2 del Boss |
 | `"roomClear"` | `{}` | Mostra el botó "Sala següent" |
-| `"victory"` | `{}` | Mostra la pantalla de victòria |
+| `"victory"` | `{ score: { damageDealt, critsLanded, turnsUsed, potionsUsed } }` | Mostra la pantalla de victòria amb estadístiques |
 | `"gameOver"` | `{}` | Mostra la pantalla de derrota |
 
 Els `msgType` del log (`"normal"`, `"damage"`, `"heal"`, `"crit"`, `"skill"`, `"defend"`, `"info"`, `"boss"`, `"victory"`, `"danger"`) controlen el color del text al client.

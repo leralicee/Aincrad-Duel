@@ -69,10 +69,25 @@ Has de superar 3 sales d'enemics i el Boss final. Cada enemic és més difícil 
 |---|---|---|---|---|
 | Sala 1 | Goblin Scout | 30 | 8 | 2 |
 | Sala 2 | Orc Warrior | 45 | 12 | 3 |
-| Sala 3 | Stone Troll | 60 | 15 | 4 |
-| Boss | Kobold King | 120 | 18 → 27 | 6 |
+| Sala 3 | Stone Troll | 60 | 15 | 4 | ☠ Atac especial aplica Verí |
+| Boss | Kobold King | 120 | 18 → 27 | 6 | 🔥 Fase 2: atac especial aplica Cremada |
 
-En derrotar cada enemic, recuperes **20 HP** i **10 de Mana** per preparar-te per a la sala següent.
+En derrotar cada enemic, recuperes **20 HP** i **10 de Mana** per preparar-te per a la sala següent. A més, cada torn de l'enemic regeneres **+5 Mana** passivament (si no estàs al màxim).
+
+---
+
+## Efectes d'estat
+
+Alguns enemics poden aplicar efectes negatius amb els seus atacs especials:
+
+| Efecte | Qui l'aplica | Dany | Durada |
+|---|---|---|---|
+| ☠ **Verí** | Stone Troll (atac especial) | 4 HP/torn | 3 torns |
+| 🔥 **Cremada** | Kobold King Fase 2 (atac especial) | 6 HP/torn | 2 torns |
+
+L'efecte actiu es mostra al teu panel d'estadístiques. Cada torn de l'enemic l'efecte fa dany i decrements el comptador. Quan arriba a 0, l'efecte desapareix sol.
+
+> **Consell:** Si el Stone Troll t'aplica verí (4 dany × 3 torns = 12 de dany total acumulat), considera usar una poció si tens poc HP.
 
 ---
 
@@ -83,11 +98,14 @@ El Kobold King és el repte final i té **dues fases**:
 **Fase 1** (HP > 60):
 - Comportament normal. ATK = 18.
 - Combina atacs bàsics (70% probabilitat) i habilitats especials (30% probabilitat).
+- Els atacs especials fan 1.5× el dany bàsic.
 
 **Fase 2** (HP ≤ 60, el 50% del seu màxim):
 - S'activa automàticament quan el Boss arriba al 50% de vida.
-- La pantalla mostra un avís de canvi de fase.
+- La pantalla mostra `⚠ Kobold King [FASE 2]` en vermell.
 - **ATK augmenta a 27** — els atacs fan molt més dany.
+- **50% de probabilitat d'atac especial** (vs 30% en Fase 1) — molt més agressiu.
+- Els atacs especials fan 1.75× el dany i **apliquen Cremada 🔥** (6 dany/torn × 2 torns).
 - Considera defensar-te un torn per aguantar mentre recuperes Mana per a la habilitat especial.
 
 ---

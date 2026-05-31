@@ -184,6 +184,82 @@ model:SetPrimaryPartCFrame(CFrame.new(10, 2, 0))  -- ara sempre funciona
 
 ---
 
+### Millora D — Efectes d'estat: verí i cremada
+
+**Problema identificat:**
+El combat era massa lineal: atacar i rebre dany. Sense mecàniques de pressió temporal, el jugador podia usar la mateixa estratègia (atacar sense parar) a totes les sales sense necessitat d'adaptar-se.
+
+**Millora proposada:**
+Afegir efectes d'estat que apliquen dany passiu durant X torns:
+- **Verí** (Stone Troll, Sala 3): 4 dany/torn × 3 torns quan usa l'atac especial.
+- **Cremada** (Kobold King Fase 2): 6 dany/torn × 2 torns quan usa l'atac especial en Fase 2.
+
+**Implementació OOP:**
+L'efecte s'emmagatzema a `PlayerStats.statusEffect = { type, damage, turnsLeft }`. Els mètodes `applyStatusEffect()` i `tickStatusEffect()` gestionen l'aplicació i l'evolució. `Enemy` rep un paràmetre `specialEffect` al constructor per configurar-lo de manera declarativa.
+
+**Codi clau:**
+```lua
+-- PlayerStats.luau
+function PlayerStats:applyStatusEffect(effectType, damage, turns)
+    if self.statusEffect == nil then
+        self.statusEffect = { type = effectType, damage = damage, turnsLeft = turns }
+    end
+end
+
+function PlayerStats:tickStatusEffect()
+    if not self.statusEffect then return 0, nil end
+    local dmg = self.statusEffect.damage
+    local effectType = self.statusEffect.type
+    self.hp = math.max(0, self.hp - dmg)
+    self.statusEffect.turnsLeft -= 1
+    if self.statusEffect.turnsLeft <= 0 then self.statusEffect = nil end
+    return dmg, effectType
+end
+```
+
+**Estat:** ✅ **Aplicada**
+
+---
+
+### Millora E — Regeneració passiva de mana
+
+**Problema identificat:**
+El mana no es recuperava durant el combat, només entre sales. Això desincentivava usar la habilitat especial a les primeres sales perquè el jugador temia quedar-se sense mana per al Boss.
+
+**Millora proposada:**
+Regenerar 5 de Mana al final de cada torn de l'enemic (si el jugador no és a màxim de mana). Això premia l'estratègia d'aguantar en combat i fa la habilitat especial viable en qualsevol moment.
+
+```lua
+-- init.server.luau (dins enemyTurn)
+if playerObj.mana < playerObj.maxMana then
+    playerObj:regenerateMana(5)
+    log("+5 Mana regenerat.", "heal")
+end
+```
+
+**Estat:** ✅ **Aplicada**
+
+---
+
+### Millora F — Puntuació a la pantalla de victòria
+
+**Problema identificat:**
+La pantalla de victòria mostrava "🏆 VICTÒRIA!" però cap estadística. L'usuari no sabia com havia jugat.
+
+**Millora proposada:**
+Mostrar estadístiques de la partida (dany total, crítics, torns usats, pocions usades) a la pantalla de victòria. Les estadístiques es rastregen al servidor via `combatStats` i s'envien amb l'event `victory`.
+
+```lua
+-- init.server.luau
+local combatStats = { damageDealt = 0, critsLanded = 0, turnsUsed = 0, potionsUsed = 0 }
+-- ...
+sendUI("victory", { score = combatStats })
+```
+
+**Estat:** ✅ **Aplicada**
+
+---
+
 ## 3. Reflexió final
 
 ### Sobre el procés de desenvolupament
@@ -213,4 +289,7 @@ El joc completa el seu bucle de joc complet: el jugador pot iniciar una partida,
 - Animacions de combat dels models 3D (atacar, rebre dany, morir)
 - Sistema de guardat de millors puntuacions (DataStore de Roblox)
 - Mode multijugador cooperatiu (l'arquitectura client-servidor actual ho facilitaria)
-- Sistema de verí i estats alterats (explorat a Fase 1 però descartat per temps)
+- So i música de fons per a cada tipus de combat
+- Animacions de combat dels models 3D
+- Sistema de guardat de millors puntuacions (DataStore de Roblox)
+- Mode multijugador cooperatiu

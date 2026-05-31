@@ -17,12 +17,24 @@ local combatState = "IDLE"
 local currentRoom = 1
 local playerObj = nil
 
+-- Estadístiques de partida (s'acumulen tota la run)
+local combatStats = { damageDealt = 0, critsLanded = 0, turnsUsed = 0, potionsUsed = 0 }
+
+-- Noms dels efectes d'estat per als missatges de log
+local STATUS_NAMES = { poison = "Verí ☠", burn = "Cremada 🔥" }
+
 local ROOMS = {
-	{ name = "Goblin Scout",   maxHp = 30,  atk = 8,  def = 2, modelName = "GoblinModel" },
-	{ name = "Orc Warrior",    maxHp = 45,  atk = 12, def = 3, modelName = "OrcModel" },
-	{ name = "Stone Troll",    maxHp = 60,  atk = 15, def = 4, modelName = "TrollModel" },
+	{ name = "Goblin Scout", maxHp = 30,  atk = 8,  def = 2, modelName = "GoblinModel" },
+	{ name = "Orc Warrior",  maxHp = 45,  atk = 12, def = 3, modelName = "OrcModel" },
+	-- Stone Troll: l'atac especial aplica verí (4 dany/torn durant 3 torns)
+	{ name = "Stone Troll",  maxHp = 60,  atk = 15, def = 4, modelName = "TrollModel",
+	  specialEffect = { type = "poison", damage = 4, turns = 3 } },
 }
 local BOSS = { name = "Kobold King", maxHp = 120, atk = 18, def = 6, modelName = "BossModel" }
+
+-- ============================================================
+-- Utilitats
+-- ============================================================
 
 local function sendUI(action, data)
 	if currentPlayer then
@@ -44,8 +56,13 @@ local function pushStats()
 		enemyName = currentEnemyData.name,
 		enemyPhase = currentEnemyData.phase,
 		room = currentRoom,
+		statusEffect = playerObj.statusEffect,  -- nil o { type, damage, turnsLeft }
 	})
 end
+
+-- ============================================================
+-- Torn de l'enemic
+-- ============================================================
 
 local function enemyTurn()
 	if combatState ~= "ENEMY_TURN" then return end
@@ -65,18 +82,55 @@ local function enemyTurn()
 	local attackDesc = isSpecial and "usa una habilitat especial" or "t'ataca"
 	log(currentEnemyData.name .. " " .. attackDesc .. "! Et fa " .. damage .. " de dany!", "damage")
 
-	playerObj.isDefending = false
-	pushStats()
+	-- Notificar si l'atac especial ha aplicat un efecte d'estat
+	if isSpecial and playerObj.statusEffect then
+		local se = playerObj.statusEffect
+		log("Has quedat afectat per " .. (STATUS_NAMES[se.type] or se.type) ..
+			"! (" .. se.damage .. " dany/torn, " .. se.turnsLeft .. " torns)", "danger")
+	end
 
+	playerObj.isDefending = false
+
+	-- Comprovar mort per atac directe
 	if playerObj:isDead() then
 		combatState = "GAME_OVER"
+		pushStats()
 		sendUI("gameOver", {})
 		return
 	end
 
+	-- Tick d'efecte d'estat (verí/cremada)
+	local statusDmg, statusType = playerObj:tickStatusEffect()
+	if statusDmg > 0 then
+		log((STATUS_NAMES[statusType] or "Efecte d'estat") ..
+			" et fa " .. statusDmg .. " de dany!", "damage")
+		-- Notificar si l'efecte ha desaparegut
+		if not playerObj.statusEffect then
+			log("L'efecte d'estat ha desaparegut.", "info")
+		end
+		-- Comprovar mort per efecte d'estat
+		if playerObj:isDead() then
+			combatState = "GAME_OVER"
+			pushStats()
+			sendUI("gameOver", {})
+			return
+		end
+	end
+
+	-- Regeneració passiva de mana (5 per torn)
+	if playerObj.mana < playerObj.maxMana then
+		playerObj:regenerateMana(5)
+		log("+5 Mana regenerat.", "heal")
+	end
+
+	pushStats()
 	combatState = "PLAYER_TURN"
 	log("El teu torn.", "info")
 end
+
+-- ============================================================
+-- Gestió d'enemics i sales
+-- ============================================================
 
 local function clearEnemy()
 	if currentEnemyModel then
@@ -97,7 +151,7 @@ local function spawnEnemy(data, isBoss)
 	model.Name = "CurrentEnemy"
 	model.Parent = workspace
 
-	-- Posicionament segur
+	-- Posicionament segur (fallback si no hi ha BasePart)
 	local part = model:FindFirstChildWhichIsA("BasePart")
 	if not part then
 		local dummy = Instance.new("Part")
@@ -116,10 +170,11 @@ local function spawnEnemy(data, isBoss)
 	if isBoss then
 		currentEnemyData = Boss.new(data.name, data.maxHp, data.atk, data.def)
 	else
-		currentEnemyData = Enemy.new(data.name, data.maxHp, data.atk, data.def, currentRoom)
+		-- Passa specialEffect a Enemy.new per habilitar efectes d'estat
+		currentEnemyData = Enemy.new(data.name, data.maxHp, data.atk, data.def,
+			currentRoom, data.specialEffect)
 	end
 
-	-- Notifica al client perquè creï la billboard
 	sendUI("spawnEnemy", {
 		enemyName = currentEnemyData.name,
 		maxHp = currentEnemyData.maxHp,
@@ -142,6 +197,10 @@ local function startRoom()
 	log("El teu torn. Tria una acció.", "info")
 end
 
+-- ============================================================
+-- Processament d'accions del jugador
+-- ============================================================
+
 local function processAction(player, action)
 	if player ~= currentPlayer then return end
 	if combatState ~= "PLAYER_TURN" then
@@ -155,6 +214,9 @@ local function processAction(player, action)
 		local isCrit = playerObj:rollCrit()
 		local rawDmg = isCrit and math.floor(playerObj.atk * 1.5) or playerObj.atk
 		local dealt = currentEnemyData:takeDamage(rawDmg)
+		combatStats.turnsUsed += 1
+		combatStats.damageDealt += dealt
+		if isCrit then combatStats.critsLanded += 1 end
 		message = "Ataces " .. currentEnemyData.name .. " per " .. dealt .. " de dany!"
 		if isCrit then message = "⚡ CRÍTIC! " .. message end
 		msgType = isCrit and "crit" or "normal"
@@ -165,6 +227,9 @@ local function processAction(player, action)
 			log("Mana insuficient! (necessites 10)", "danger")
 			return
 		end
+		combatStats.turnsUsed += 1
+		combatStats.damageDealt += dealt
+		if isCrit then combatStats.critsLanded += 1 end
 		message = "HABILITAT ESPECIAL! Fas " .. dealt .. " de dany!"
 		if isCrit then message = "⚡ CRÍTIC! " .. message end
 		msgType = "skill"
@@ -174,10 +239,13 @@ local function processAction(player, action)
 			log("No tens pocions!", "danger")
 			return
 		end
+		combatStats.turnsUsed += 1
+		combatStats.potionsUsed += 1
 		message = "Utilitzes una poció! Recuperes 30 HP. Restants: " .. playerObj.potions
 		msgType = "heal"
 
 	elseif action == "defend" then
+		combatStats.turnsUsed += 1
 		playerObj.isDefending = true
 		message = "Et defenses! El proper atac farà la meitat de dany."
 		msgType = "defend"
@@ -186,24 +254,28 @@ local function processAction(player, action)
 	log(message, msgType)
 	pushStats()
 
-	-- Comprovar fase 2 del boss
+	-- Comprovar transició a Fase 2 del boss
 	if currentEnemyData.checkPhase and currentEnemyData:checkPhase() then
-		log("⚠️ " .. currentEnemyData.name .. " entra en FASE 2! ATK augmentat!", "boss")
+		log("⚠️ " .. currentEnemyData.name .. " entra en FASE 2! ATK augmentat i cremada activada!", "boss")
 		sendUI("bossPhase2", {})
 		pushStats()
 	end
 
+	-- Comprovar si l'enemic ha mort
 	if currentEnemyData:isDead() then
 		combatState = "ROOM_CLEAR"
 		log("Has derrotat " .. currentEnemyData.name .. "!", "victory")
 		playerObj:heal(20)
 		playerObj:regenerateMana(10)
+		-- Eliminar efecte d'estat en canviar de sala
+		playerObj.statusEffect = nil
 		pushStats()
 		clearEnemy()
 
 		if currentRoom >= 4 then
 			combatState = "VICTORY"
-			sendUI("victory", {})
+			-- Envia estadístiques finals amb la victòria
+			sendUI("victory", { score = combatStats })
 		else
 			sendUI("roomClear", {})
 		end
@@ -214,11 +286,17 @@ local function processAction(player, action)
 	enemyTurn()
 end
 
+-- ============================================================
+-- Connexió d'events del client
+-- ============================================================
+
 combatRemote.OnServerEvent:Connect(function(player, action)
 	if action == "startGame" then
 		currentRoom = 1
 		currentPlayer = player
 		playerObj = PlayerStats.new(player.Name)
+		-- Reiniciar estadístiques de partida
+		combatStats = { damageDealt = 0, critsLanded = 0, turnsUsed = 0, potionsUsed = 0 }
 		startRoom()
 
 	elseif action == "nextRoom" then
@@ -230,4 +308,4 @@ combatRemote.OnServerEvent:Connect(function(player, action)
 	end
 end)
 
-print("CombatManager carregat")
+print("CombatManager carregat ✓")
